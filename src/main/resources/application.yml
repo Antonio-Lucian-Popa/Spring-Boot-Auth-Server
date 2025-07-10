@@ -1,0 +1,99 @@
+spring:
+  application:
+    name: auth-server
+  profiles:
+    active: dev
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/authdb
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    contexts: dev
+    drop-first: false
+    default-schema: public
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: your-email@gmail.com
+    password: your-password
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+
+jwt:
+  secret: dev-secret-key
+  access-token-expiration-minutes: 15
+  refresh-token-expiration-days: 7
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api/auth
+
+cors:
+  allowed-origins: "http://localhost:5173"
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: jdbc:postgresql://prod-db-host:5432/authdb
+    username: prod_user
+    password: prod_password
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    contexts: prod
+    drop-first: false
+    default-schema: public
+
+  mail:
+    host: smtp.mailgun.org
+    port: 587
+    username: prod@example.com
+    password: prod-email-pass
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-expiration-minutes: 15
+  refresh-token-expiration-days: 7
+
+server:
+  port: 8080
+  servlet:
+    context-path: /api/auth
+
+cors:
+  allowed-origins: "https://your-frontend.com"

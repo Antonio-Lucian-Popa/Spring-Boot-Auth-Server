@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - changeSet:
+      id: 1
+      author: Antonio Lucian
+      changes:
+        - include:
+            file: DDL/001-create-users.sql
+            relativeToChangelogFile: true
+        - include:
+            file: DDL/002-create-roles.sql
+            relativeToChangelogFile: true
