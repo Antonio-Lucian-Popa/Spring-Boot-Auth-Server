@@ -1,9 +1,6 @@
 package com.asusoftware.AuthServer.controller;
 
-import com.asusoftware.AuthServer.dto.JwtResponse;
-import com.asusoftware.AuthServer.dto.LoginRequest;
-import com.asusoftware.AuthServer.dto.RefreshTokenRequest;
-import com.asusoftware.AuthServer.dto.RegisterRequest;
+import com.asusoftware.AuthServer.dto.*;
 import com.asusoftware.AuthServer.service.AuthService;
 import com.asusoftware.AuthServer.utils.CookieUtils;
 import io.jsonwebtoken.Claims;
@@ -52,6 +49,18 @@ public class AuthController {
     @GetMapping("/verify")
     public ResponseEntity<String> verifyEmail(@RequestParam("token") String token) {
         return authService.verifyEmail(token);
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        authService.forgotPassword(request.email());
+        return ResponseEntity.ok("Password reset email sent");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request.token(), request.newPassword());
+        return ResponseEntity.ok("Password reset successfully");
     }
 
 

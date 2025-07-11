@@ -41,5 +41,25 @@ public class EmailService {
 
         mailSender.send(message);
     }
+
+    public void sendResetPasswordEmail(String to, String token, String name) throws MessagingException {
+        Context context = new Context();
+        context.setVariable("name", name);
+        context.setVariable("resetLink", "http://localhost:5173/reset-password?token=" + token);
+
+        String htmlContent = templateEngine.process("reset-password", context);
+        sendHtmlEmail(to, "Resetare parolă", htmlContent);
+    }
+
+    private void sendHtmlEmail(String to, String subject, String htmlContent) throws MessagingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+        helper.setTo(to);
+        helper.setSubject(subject);
+        helper.setText(htmlContent, true);
+        mailSender.send(message);
+    }
+
+
 }
 

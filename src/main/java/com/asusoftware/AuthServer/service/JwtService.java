@@ -108,6 +108,17 @@ public class JwtService {
                 .compact();
     }
 
+    public String generateResetPasswordToken(User user) {
+        return generateToken(user.getEmail(), Map.of(
+                "scope", "password_reset"
+        ), 15 * 60 * 1000); // 15 minute valabilitate
+    }
+
+    public Claims extractAllClaimsFromResetToken(String token) {
+        return extractAllClaims(token); // deja există metoda
+    }
+
+
 
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());

@@ -123,5 +123,40 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    @Override
+    public void forgotPassword(String email) {
+        var user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        String token = jwtService.generateResetPasswordToken(user);
+        try {
+            emailService.sendResetPasswordEmail(user.getEmail(), token, user.getFirstName());
+        } catch (MessagingException e) {
+            System.err.println("Failed to send reset email: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public void resetPassword(String token, String newPassword) {
+        try {
+            Claims claims = jwtService.extractAllClaimsFromResetToken(token);
+            String email = claims.getSubject();
+            String scope = claims.get("scope", String.class);
+
+            if (!"password_reset".equals(scope)) {
+                throw new RuntimeException("Invalid token scope");
+            }
+
+            var user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            user.setPassword(passwordEncoder.encode(newPassword));
+            userRepository.save(user);
+        } catch (Exception e) {
+            throw new RuntimeException("Invalid or expired reset token");
+        }
+    }
+
+
 
 }

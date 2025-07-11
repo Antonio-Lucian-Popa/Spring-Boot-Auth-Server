@@ -11,5 +11,7 @@ public interface AuthService {
     void register(RegisterRequest request);
     JwtResponse refreshToken(RefreshTokenRequest request);
     ResponseEntity<String> verifyEmail(String token);
+    void forgotPassword(String email);
+    void resetPassword(String token, String newPassword);
 
 }
