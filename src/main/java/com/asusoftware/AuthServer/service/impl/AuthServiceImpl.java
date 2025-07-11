@@ -17,6 +17,7 @@ import io.jsonwebtoken.Claims;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -125,17 +126,39 @@ public class AuthServiceImpl implements AuthService {
             var user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
-            user.setEnabled(true); // ⚠️ Activăm utilizatorul după verificarea emailului
+            user.setEnabled(true);
             userRepository.save(user);
 
             logEventService.logEvent(email, AuditEventType.EMAIL_VERIFIED, true, httpRequest);
 
-            return ResponseEntity.ok("Email verified successfully");
+            String html = """
+            <html>
+              <head>
+                <title>Email Verified</title>
+                <style>
+                  body { font-family: sans-serif; text-align: center; padding-top: 50px; }
+                  a { text-decoration: none; color: white; background: #4CAF50; padding: 10px 20px; border-radius: 5px; }
+                </style>
+              </head>
+              <body>
+                <h1>Email verified successfully!</h1>
+                <p>Your account has been activated.</p>
+                <a href="http://localhost:5173/login">Go to Login</a>
+              </body>
+            </html>
+        """;
+
+            return ResponseEntity
+                    .ok()
+                    .contentType(MediaType.TEXT_HTML)
+                    .body(html);
+
         } catch (Exception e) {
             logEventService.logEvent("unknown", AuditEventType.EMAIL_VERIFIED, false, httpRequest);
             return ResponseEntity.badRequest().body("Invalid or expired token");
         }
     }
+
 
     @Override
     public void forgotPassword(String email, HttpServletRequest httpRequest) {
