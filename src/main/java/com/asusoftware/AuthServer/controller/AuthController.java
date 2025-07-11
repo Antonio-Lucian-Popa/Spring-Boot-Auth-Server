@@ -7,8 +7,11 @@ import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -29,10 +32,13 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody RegisterRequest request, HttpServletRequest httpRequest) {
+    @PostMapping(value = "/register", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<String, String>> register(@RequestBody RegisterRequest request, HttpServletRequest httpRequest) {
         authService.register(request, httpRequest);
-        return ResponseEntity.ok("User registered successfully.");
+        return ResponseEntity.ok(Map.of(
+                "success", "true",
+                "message", "User registered successfully"
+        ));
     }
 
     @PostMapping("/refresh")
