@@ -5,6 +5,7 @@ import com.asusoftware.AuthServer.entity.User;
 import com.asusoftware.AuthServer.repository.RoleRepository;
 import com.asusoftware.AuthServer.repository.UserRepository;
 import com.asusoftware.AuthServer.service.JwtService;
+import com.asusoftware.AuthServer.utils.CookieUtils;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -53,10 +54,21 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         String refreshToken = jwtService.generateRefreshToken(user);
 
         // Redirect to frontend with tokens (you can improve this by using cookies instead)
-        String redirectUrl = String.format("%s/oauth2/callback?access_token=%s&refresh_token=%s",
+       /* String redirectUrl = String.format("%s/oauth2/callback?access_token=%s&refresh_token=%s",
                 "http://localhost:5173", accessToken, refreshToken);
 
-        response.sendRedirect(redirectUrl);
+        response.sendRedirect(redirectUrl);*/
+
+        if (request.getHeader("Accept") != null && request.getHeader("Accept").contains("application/json")) {
+            // redirect with tokens as query params for mobile
+            String redirectUrl = String.format("myapp://oauth2/callback?access_token=%s&refresh_token=%s", accessToken, refreshToken);
+            response.sendRedirect(redirectUrl);
+        } else {
+            // Web - set cookies
+            CookieUtils.addJwtCookies(response, accessToken, refreshToken);
+            response.sendRedirect("http://localhost:5173"); // frontend homepage
+        }
+
     }
 }
 
