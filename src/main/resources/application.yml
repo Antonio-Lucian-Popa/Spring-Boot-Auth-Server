@@ -12,7 +12,7 @@ spring:
       on-profile: dev
 
   datasource:
-    url: jdbc:postgresql://antonio-dev.go.ro:15882/authdb
+    url: jdbc:postgresql://antonio-dev.go.ro:15882/authServerDb
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
@@ -77,7 +77,7 @@ spring:
       on-profile: prod
 
   datasource:
-    url: jdbc:postgresql://antonio-dev.go.ro:15882/authdb
+    url: jdbc:postgresql://antonio-dev.go.ro:15882/authServerDb
     username: prod_user
     password: prod_password
     driver-class-name: org.postgresql.Driver
