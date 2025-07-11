@@ -36,7 +36,6 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         User user = userRepository.findByEmail(email).orElseGet(() -> {
             User newUser = new User();
-            newUser.setId(UUID.randomUUID());
             newUser.setEmail(email);
             newUser.setUsername(email);
             newUser.setFirstName(firstName);
