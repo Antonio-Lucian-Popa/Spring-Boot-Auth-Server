@@ -7,14 +7,13 @@ import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
+import java.io.IOException;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping
 @RequiredArgsConstructor
 public class AuthController {
 
@@ -32,14 +31,17 @@ public class AuthController {
         }
     }
 
-    @PostMapping(value = "/register", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, String>> register(@RequestBody RegisterRequest request, HttpServletRequest httpRequest) {
+    @PostMapping("/register")
+    public ResponseEntity<String> register(@RequestBody RegisterRequest request, HttpServletRequest httpRequest) {
         authService.register(request, httpRequest);
-        return ResponseEntity.ok(Map.of(
-                "success", "true",
-                "message", "User registered successfully"
-        ));
+        return ResponseEntity.ok("User registered successfully.");
     }
+
+    @GetMapping("/api/auth/google-login")
+    public void redirectToGoogle(HttpServletResponse response) throws IOException {
+        response.sendRedirect("/oauth2/authorization/google");
+    }
+
 
     @PostMapping("/refresh")
     public ResponseEntity<JwtResponse> refresh(@RequestBody RefreshTokenRequest request, HttpServletRequest httpRequest) {

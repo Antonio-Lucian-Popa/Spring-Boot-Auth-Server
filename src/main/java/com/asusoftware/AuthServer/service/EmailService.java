@@ -28,7 +28,7 @@ public class EmailService {
 
         Context context = new Context();
         context.setVariable("name", name);
-        context.setVariable("verificationLink", verificationUrl);
+        context.setVariable("verificationUrl", verificationUrl);
         context.setVariable("email", to);
 
         String htmlContent = templateEngine.process("email/verification-email", context);
