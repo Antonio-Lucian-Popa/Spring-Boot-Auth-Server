@@ -7,5 +7,7 @@ public enum AuditEventType {
     EMAIL_VERIFIED,
     PASSWORD_RESET,
     ACCOUNT_CREATED,
+    REFRESH_TOKEN,
+    FORGOT_PASSWORD
 }
 

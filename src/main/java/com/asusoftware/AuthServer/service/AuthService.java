@@ -8,11 +8,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 
 public interface AuthService {
-    JwtResponse login(LoginRequest request);
+    JwtResponse login(LoginRequest request, HttpServletRequest httpRequest);
     void register(RegisterRequest request, HttpServletRequest httpRequest);
-    JwtResponse refreshToken(RefreshTokenRequest request);
-    ResponseEntity<String> verifyEmail(String token);
-    void forgotPassword(String email);
-    void resetPassword(String token, String newPassword);
+    JwtResponse refreshToken(RefreshTokenRequest request, HttpServletRequest httpRequest);
+    ResponseEntity<String> verifyEmail(String token, HttpServletRequest httpRequest);
+    void forgotPassword(String email, HttpServletRequest httpRequest);
+    void resetPassword(String token, String newPassword, HttpServletRequest httpRequest);
 
 }

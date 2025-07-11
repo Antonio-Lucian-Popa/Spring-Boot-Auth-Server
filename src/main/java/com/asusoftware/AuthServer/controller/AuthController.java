@@ -19,7 +19,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request, HttpServletRequest httpRequest, HttpServletResponse response) {
-        JwtResponse jwt = authService.login(request);
+        JwtResponse jwt = authService.login(request, httpRequest);
 
         if (isBrowser(httpRequest)) {
             CookieUtils.addJwtCookies(response, jwt.accessToken(), jwt.refreshToken());
@@ -36,8 +36,8 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<JwtResponse> refresh(@RequestBody RefreshTokenRequest request) {
-        return ResponseEntity.ok(authService.refreshToken(request));
+    public ResponseEntity<JwtResponse> refresh(@RequestBody RefreshTokenRequest request, HttpServletRequest httpRequest) {
+        return ResponseEntity.ok(authService.refreshToken(request, httpRequest));
     }
 
     @PostMapping("/logout")
@@ -47,19 +47,19 @@ public class AuthController {
     }
 
     @GetMapping("/verify")
-    public ResponseEntity<String> verifyEmail(@RequestParam("token") String token) {
-        return authService.verifyEmail(token);
+    public ResponseEntity<String> verifyEmail(@RequestParam("token") String token, HttpServletRequest httpRequest) {
+        return authService.verifyEmail(token, httpRequest);
     }
 
     @PostMapping("/forgot-password")
-    public ResponseEntity<String> forgotPassword(@RequestBody ForgotPasswordRequest request) {
-        authService.forgotPassword(request.email());
+    public ResponseEntity<String> forgotPassword(@RequestBody ForgotPasswordRequest request, HttpServletRequest httpRequest) {
+        authService.forgotPassword(request.email(), httpRequest);
         return ResponseEntity.ok("Password reset email sent");
     }
 
     @PostMapping("/reset-password")
-    public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordRequest request) {
-        authService.resetPassword(request.token(), request.newPassword());
+    public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordRequest request, HttpServletRequest httpRequest) {
+        authService.resetPassword(request.token(), request.newPassword(), httpRequest);
         return ResponseEntity.ok("Password reset successfully");
     }
 

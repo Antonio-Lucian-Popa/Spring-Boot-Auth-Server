@@ -35,13 +35,16 @@ public class AuthServiceImpl implements AuthService {
     private final AuditService logEventService;
 
     @Override
-    public JwtResponse login(LoginRequest request) {
+    public JwtResponse login(LoginRequest request, HttpServletRequest httpRequest) {
         var user = userRepository.findByUsername(request.username())
                 .orElseThrow(() -> new RuntimeException("Invalid credentials"));
 
         if (!passwordEncoder.matches(request.password(), user.getPassword())) {
+            logEventService.logEvent(request.username(), AuditEventType.LOGIN_FAILURE, false, httpRequest);
             throw new RuntimeException("Invalid credentials");
         }
+
+        logEventService.logEvent(user.getEmail(), AuditEventType.LOGIN_SUCCESS, true, httpRequest);
 
         String accessToken = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
@@ -90,8 +93,10 @@ public class AuthServiceImpl implements AuthService {
 
 
     @Override
-    public JwtResponse refreshToken(RefreshTokenRequest request) {
+    public JwtResponse refreshToken(RefreshTokenRequest request, HttpServletRequest httpRequest) {
         var user = jwtService.extractUserFromRefreshToken(request.refreshToken());
+        logEventService.logEvent(user.getEmail(), AuditEventType.REFRESH_TOKEN, true, httpRequest);
+
         String newAccessToken = jwtService.generateToken(user);
         String newRefreshToken = jwtService.generateRefreshToken(user);
 
@@ -106,7 +111,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public ResponseEntity<String> verifyEmail(String token) {
+    public ResponseEntity<String> verifyEmail(String token, HttpServletRequest httpRequest) {
         try {
             Claims claims = jwtService.extractAllClaims(token);
             String email = claims.getSubject();
@@ -122,27 +127,32 @@ public class AuthServiceImpl implements AuthService {
             user.setEnabled(true); // ⚠️ Activăm utilizatorul după verificarea emailului
             userRepository.save(user);
 
+            logEventService.logEvent(email, AuditEventType.EMAIL_VERIFIED, true, httpRequest);
+
             return ResponseEntity.ok("Email verified successfully");
         } catch (Exception e) {
+            logEventService.logEvent("unknown", AuditEventType.EMAIL_VERIFIED, false, httpRequest);
             return ResponseEntity.badRequest().body("Invalid or expired token");
         }
     }
 
     @Override
-    public void forgotPassword(String email) {
+    public void forgotPassword(String email, HttpServletRequest httpRequest) {
         var user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         String token = jwtService.generateResetPasswordToken(user);
         try {
             emailService.sendResetPasswordEmail(user.getEmail(), token, user.getFirstName());
+            logEventService.logEvent(email, AuditEventType.FORGOT_PASSWORD, true, httpRequest);
         } catch (MessagingException e) {
+            logEventService.logEvent(email, AuditEventType.FORGOT_PASSWORD, false, httpRequest);
             System.err.println("Failed to send reset email: " + e.getMessage());
         }
     }
 
     @Override
-    public void resetPassword(String token, String newPassword) {
+    public void resetPassword(String token, String newPassword, HttpServletRequest httpRequest) {
         try {
             Claims claims = jwtService.extractAllClaimsFromResetToken(token);
             String email = claims.getSubject();
@@ -157,7 +167,10 @@ public class AuthServiceImpl implements AuthService {
 
             user.setPassword(passwordEncoder.encode(newPassword));
             userRepository.save(user);
+
+            logEventService.logEvent(email, AuditEventType.PASSWORD_RESET, true, httpRequest);
         } catch (Exception e) {
+            logEventService.logEvent("unknown", AuditEventType.PASSWORD_RESET, false, httpRequest);
             throw new RuntimeException("Invalid or expired reset token");
         }
     }
