@@ -20,9 +20,9 @@ public class JwtService {
     private final long refreshTokenExpirationMillis;
 
     public JwtService(
-            @Value("${auth.jwt.secret}") String secret,
-            @Value("${auth.jwt.access-token-expiration-minutes}") long accessTokenMinutes,
-            @Value("${auth.jwt.refresh-token-expiration-days}") long refreshTokenDays
+            @Value("${jwt.secret}") String secret,
+            @Value("${jwt.access-token-expiration-minutes}") long accessTokenMinutes,
+            @Value("${jwt.refresh-token-expiration-days}") long refreshTokenDays
     ) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes());
         this.accessTokenExpirationMillis = accessTokenMinutes * 60 * 1000;

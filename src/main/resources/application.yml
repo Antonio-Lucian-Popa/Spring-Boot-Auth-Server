@@ -14,7 +14,7 @@ spring:
   datasource:
     url: jdbc:postgresql://antonio-dev.go.ro:15882/authServerDb
     username: postgres
-    password: postgres
+    password: password
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -24,7 +24,7 @@ spring:
 
   liquibase:
     enabled: true
-    change-log: classpath:db/changelog/db.changelog-master.xml
+    change-log: classpath:db/changelog/db.changelog-master.yaml
     contexts: dev
     drop-first: false
     default-schema: public
@@ -57,7 +57,7 @@ spring:
 
 
 jwt:
-  secret: dev-secret-key
+  secret: cnLbAkFva0RYi+kvpPkLCBrSCSz91CnUkYAXAvU60RoPGjTMHRiYuCaLRMVfRQ+8
   access-token-expiration-minutes: 15
   refresh-token-expiration-days: 7
 
@@ -89,7 +89,7 @@ spring:
 
   liquibase:
     enabled: true
-    change-log: classpath:db/changelog/db.changelog-master.xml
+    change-log: classpath:db/changelog/db.changelog-master.yaml
     contexts: prod
     drop-first: false
     default-schema: public

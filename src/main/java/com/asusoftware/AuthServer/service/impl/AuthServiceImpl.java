@@ -21,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -173,5 +174,10 @@ public class AuthServiceImpl implements AuthService {
             logEventService.logEvent("unknown", AuditEventType.PASSWORD_RESET, false, httpRequest);
             throw new RuntimeException("Invalid or expired reset token");
         }
+    }
+
+    @Override
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
     }
 }
