@@ -12,6 +12,7 @@ import com.asusoftware.AuthServer.service.AuthService;
 import com.asusoftware.AuthServer.service.EmailService;
 import com.asusoftware.AuthServer.service.JwtService;
 import io.jsonwebtoken.Claims;
+import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -71,9 +72,15 @@ public class AuthServiceImpl implements AuthService {
         user.getRoles().add(role);
         userRepository.save(user);
 
-        // ✅ Generăm tokenul și trimitem emailul de verificare
-        String emailVerificationToken = jwtService.generateEmailVerificationToken(user);
-        emailService.sendVerificationEmail(user.getEmail(), emailVerificationToken);
+        try {
+            // ✅ Generăm tokenul și trimitem emailul de verificare
+            String token = jwtService.generateEmailVerificationToken(user);
+            emailService.sendVerificationEmail(user.getEmail(), token, user.getFirstName());
+        } catch (MessagingException e) {
+            // Logăm și continuăm
+            System.err.println("Failed to send verification email: " + e.getMessage());
+        }
+
     }
 
 
