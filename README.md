@@ -42,3 +42,6 @@ jwt:
   access-token-expiration-minutes: 15
   refresh-token-expiration-days: 7
 ```
+
+### Reminder
+- ca sa folosim acest auth server cu un alt back-end trebuie amandoua sa aiba acelasi jwt: secret: hgjghsd
