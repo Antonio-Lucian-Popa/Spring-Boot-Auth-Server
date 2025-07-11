@@ -41,11 +41,11 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         if (user == null) {
             user = new User();
-            user.setId(UUID.randomUUID());
             user.setEmail(email);
             user.setUsername(email);
             user.setFirstName(firstName);
             user.setLastName(lastName);
+            user.setPassword(UUID.randomUUID().toString()); // Set a random password
             user.setEnabled(true);
 
             Role userRole = roleRepository.findByName("USER")
@@ -53,7 +53,8 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
             user.getRoles().add(userRole);
 
-            userRepository.save(user);
+            user = userRepository.save(user);
+
         }
 
         String accessToken = jwtService.generateToken(user);
