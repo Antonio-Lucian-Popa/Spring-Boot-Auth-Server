@@ -30,8 +30,8 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestBody RegisterRequest request) {
-        authService.register(request);
+    public ResponseEntity<String> register(@RequestBody RegisterRequest request, HttpServletRequest httpRequest) {
+        authService.register(request, httpRequest);
         return ResponseEntity.ok("User registered successfully.");
     }
 

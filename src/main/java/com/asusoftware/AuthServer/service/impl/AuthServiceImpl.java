@@ -4,15 +4,18 @@ import com.asusoftware.AuthServer.dto.JwtResponse;
 import com.asusoftware.AuthServer.dto.LoginRequest;
 import com.asusoftware.AuthServer.dto.RefreshTokenRequest;
 import com.asusoftware.AuthServer.dto.RegisterRequest;
+import com.asusoftware.AuthServer.entity.AuditEventType;
 import com.asusoftware.AuthServer.entity.Role;
 import com.asusoftware.AuthServer.entity.User;
 import com.asusoftware.AuthServer.repository.RoleRepository;
 import com.asusoftware.AuthServer.repository.UserRepository;
+import com.asusoftware.AuthServer.service.AuditService;
 import com.asusoftware.AuthServer.service.AuthService;
 import com.asusoftware.AuthServer.service.EmailService;
 import com.asusoftware.AuthServer.service.JwtService;
 import io.jsonwebtoken.Claims;
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,6 +32,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final EmailService emailService;
+    private final AuditService logEventService;
 
     @Override
     public JwtResponse login(LoginRequest request) {
@@ -53,8 +57,9 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void register(RegisterRequest request) {
+    public void register(RegisterRequest request, HttpServletRequest httpRequest) {
         if (userRepository.existsByEmail(request.email()) || userRepository.existsByUsername(request.username())) {
+            logEventService.logEvent(request.email(), AuditEventType.ACCOUNT_CREATED, false, httpRequest);
             throw new RuntimeException("User already exists");
         }
 
@@ -64,7 +69,7 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(passwordEncoder.encode(request.password()));
         user.setFirstName(request.firstName());
         user.setLastName(request.lastName());
-        user.setEnabled(false); // ⚠️ userul NU este activ până confirmă emailul
+        user.setEnabled(false); // not verified yet
 
         var role = roleRepository.findByName("USER")
                 .orElseThrow(() -> new RuntimeException("Role not found"));
@@ -72,16 +77,16 @@ public class AuthServiceImpl implements AuthService {
         user.getRoles().add(role);
         userRepository.save(user);
 
+        logEventService.logEvent(user.getEmail(), AuditEventType.ACCOUNT_CREATED, true, httpRequest);
+
         try {
-            // ✅ Generăm tokenul și trimitem emailul de verificare
             String token = jwtService.generateEmailVerificationToken(user);
             emailService.sendVerificationEmail(user.getEmail(), token, user.getFirstName());
         } catch (MessagingException e) {
-            // Logăm și continuăm
             System.err.println("Failed to send verification email: " + e.getMessage());
         }
-
     }
+
 
 
     @Override
@@ -156,7 +161,4 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Invalid or expired reset token");
         }
     }
-
-
-
 }
