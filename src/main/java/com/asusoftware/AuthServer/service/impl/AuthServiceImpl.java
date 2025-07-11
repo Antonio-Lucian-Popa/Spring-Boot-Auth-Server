@@ -46,6 +46,11 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Invalid credentials");
         }
 
+        if(!user.isEnabled()) {
+            logEventService.logEvent(user.getEmail(), AuditEventType.LOGIN_FAILURE, false, httpRequest);
+            throw new RuntimeException("Account not verified");
+        }
+
         logEventService.logEvent(user.getEmail(), AuditEventType.LOGIN_SUCCESS, true, httpRequest);
 
         String accessToken = jwtService.generateToken(user);

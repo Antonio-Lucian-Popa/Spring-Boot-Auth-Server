@@ -37,7 +37,7 @@ public class AuthController {
         return ResponseEntity.ok("User registered successfully.");
     }
 
-    @GetMapping("/api/auth/google-login")
+    @GetMapping("/google-login")
     public void redirectToGoogle(HttpServletResponse response) throws IOException {
         response.sendRedirect("/oauth2/authorization/google");
     }
