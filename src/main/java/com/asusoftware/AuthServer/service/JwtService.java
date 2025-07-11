@@ -85,7 +85,7 @@ public class JwtService {
         return resolver.apply(claims);
     }
 
-    private Claims extractAllClaims(String token) {
+    public Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
@@ -97,6 +97,17 @@ public class JwtService {
         final String subject = extractEmail(token);
         return (subject.equals(expectedSubject) && !isTokenExpired(token));
     }
+
+    public String generateEmailVerificationToken(User user) {
+        return Jwts.builder()
+                .setSubject(user.getEmail())
+                .claim("scope", "email_verification")
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 15 * 60 * 1000)) // 15 minute
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
+    }
+
 
     private boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());

@@ -6,6 +6,7 @@ import com.asusoftware.AuthServer.dto.RefreshTokenRequest;
 import com.asusoftware.AuthServer.dto.RegisterRequest;
 import com.asusoftware.AuthServer.service.AuthService;
 import com.asusoftware.AuthServer.utils.CookieUtils;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +42,19 @@ public class AuthController {
     public ResponseEntity<JwtResponse> refresh(@RequestBody RefreshTokenRequest request) {
         return ResponseEntity.ok(authService.refreshToken(request));
     }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+        CookieUtils.clearJwtCookies(response);
+        return ResponseEntity.ok("Logged out");
+    }
+
+    @GetMapping("/verify")
+    public ResponseEntity<String> verifyEmail(@RequestParam("token") String token) {
+        return authService.verifyEmail(token);
+    }
+
+
 
     private boolean isBrowser(HttpServletRequest request) {
         String accept = request.getHeader("Accept");

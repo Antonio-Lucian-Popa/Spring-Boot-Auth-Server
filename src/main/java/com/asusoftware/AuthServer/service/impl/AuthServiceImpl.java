@@ -9,8 +9,11 @@ import com.asusoftware.AuthServer.entity.User;
 import com.asusoftware.AuthServer.repository.RoleRepository;
 import com.asusoftware.AuthServer.repository.UserRepository;
 import com.asusoftware.AuthServer.service.AuthService;
+import com.asusoftware.AuthServer.service.EmailService;
 import com.asusoftware.AuthServer.service.JwtService;
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +27,7 @@ public class AuthServiceImpl implements AuthService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final EmailService emailService;
 
     @Override
     public JwtResponse login(LoginRequest request) {
@@ -54,20 +58,24 @@ public class AuthServiceImpl implements AuthService {
         }
 
         var user = new User();
-        user.setId(UUID.randomUUID());
         user.setUsername(request.username());
         user.setEmail(request.email());
         user.setPassword(passwordEncoder.encode(request.password()));
         user.setFirstName(request.firstName());
         user.setLastName(request.lastName());
-        user.setEnabled(true);
+        user.setEnabled(false); // ⚠️ userul NU este activ până confirmă emailul
 
         var role = roleRepository.findByName("USER")
                 .orElseThrow(() -> new RuntimeException("Role not found"));
 
         user.getRoles().add(role);
         userRepository.save(user);
+
+        // ✅ Generăm tokenul și trimitem emailul de verificare
+        String emailVerificationToken = jwtService.generateEmailVerificationToken(user);
+        emailService.sendVerificationEmail(user.getEmail(), emailVerificationToken);
     }
+
 
     @Override
     public JwtResponse refreshToken(RefreshTokenRequest request) {
@@ -84,4 +92,29 @@ public class AuthServiceImpl implements AuthService {
                 user.getRoles().stream().findFirst().map(Role::getName).orElse("USER")
         );
     }
+
+    @Override
+    public ResponseEntity<String> verifyEmail(String token) {
+        try {
+            Claims claims = jwtService.extractAllClaims(token);
+            String email = claims.getSubject();
+            String scope = claims.get("scope", String.class);
+
+            if (!"email_verification".equals(scope)) {
+                return ResponseEntity.badRequest().body("Invalid verification token");
+            }
+
+            var user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            user.setEnabled(true); // ⚠️ Activăm utilizatorul după verificarea emailului
+            userRepository.save(user);
+
+            return ResponseEntity.ok("Email verified successfully");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Invalid or expired token");
+        }
+    }
+
+
 }

@@ -25,4 +25,16 @@ public class CookieUtils {
         response.addHeader("Set-Cookie", accessCookie.toString());
         response.addHeader("Set-Cookie", refreshCookie.toString());
     }
+
+    // in CookieUtils
+    public static void clearJwtCookies(HttpServletResponse response) {
+        ResponseCookie accessCookie = ResponseCookie.from("access_token", "")
+                .httpOnly(true).secure(true).path("/").maxAge(0).sameSite("Strict").build();
+        ResponseCookie refreshCookie = ResponseCookie.from("refresh_token", "")
+                .httpOnly(true).secure(true).path("/").maxAge(0).sameSite("Strict").build();
+
+        response.addHeader("Set-Cookie", accessCookie.toString());
+        response.addHeader("Set-Cookie", refreshCookie.toString());
+    }
+
 }
