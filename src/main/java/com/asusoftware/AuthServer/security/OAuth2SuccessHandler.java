@@ -14,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -27,47 +28,51 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     private final JwtService jwtService;
 
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
-        DefaultOAuth2User oAuth2User = (DefaultOAuth2User) authentication.getPrincipal();
+    @Transactional
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication)
+            throws IOException, ServletException {
 
+        DefaultOAuth2User oAuth2User = (DefaultOAuth2User) authentication.getPrincipal();
         String email = oAuth2User.getAttribute("email");
         String firstName = oAuth2User.getAttribute("given_name");
         String lastName = oAuth2User.getAttribute("family_name");
 
-        User user = userRepository.findByEmail(email).orElseGet(() -> {
-            User newUser = new User();
-            newUser.setEmail(email);
-            newUser.setUsername(email);
-            newUser.setFirstName(firstName);
-            newUser.setLastName(lastName);
-            newUser.setEnabled(true);
+        User user = userRepository.findByEmail(email).orElse(null);
 
-            Role role = roleRepository.findByName("USER")
+        if (user == null) {
+            user = new User();
+            user.setId(UUID.randomUUID());
+            user.setEmail(email);
+            user.setUsername(email);
+            user.setFirstName(firstName);
+            user.setLastName(lastName);
+            user.setEnabled(true);
+
+            Role userRole = roleRepository.findByName("USER")
                     .orElseThrow(() -> new RuntimeException("Role USER not found"));
-            newUser.getRoles().add(role);
 
-            return userRepository.save(newUser);
-        });
+            user.getRoles().add(userRole);
+
+            userRepository.save(user);
+        }
 
         String accessToken = jwtService.generateToken(user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
-        // Redirect to frontend with tokens (you can improve this by using cookies instead)
-       /* String redirectUrl = String.format("%s/oauth2/callback?access_token=%s&refresh_token=%s",
-                "http://localhost:5173", accessToken, refreshToken);
-
-        response.sendRedirect(redirectUrl);*/
-
-        if (request.getHeader("Accept") != null && request.getHeader("Accept").contains("application/json")) {
-            // redirect with tokens as query params for mobile
+        // Redirect pentru aplicație mobilă (Accept: application/json)
+        if (isMobileRequest(request)) {
             String redirectUrl = String.format("myapp://oauth2/callback?access_token=%s&refresh_token=%s", accessToken, refreshToken);
             response.sendRedirect(redirectUrl);
         } else {
-            // Web - set cookies
+            // Web: Setează JWT în cookies și redirecționează
             CookieUtils.addJwtCookies(response, accessToken, refreshToken);
-            response.sendRedirect("http://localhost:5173"); // frontend homepage
+            response.sendRedirect("http://localhost:5173"); // sau pagina dorită
         }
+    }
 
+    private boolean isMobileRequest(HttpServletRequest request) {
+        String acceptHeader = request.getHeader("Accept");
+        return acceptHeader != null && acceptHeader.contains("application/json");
     }
 }
 
