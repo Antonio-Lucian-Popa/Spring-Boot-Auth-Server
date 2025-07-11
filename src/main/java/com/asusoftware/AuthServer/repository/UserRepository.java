@@ -3,6 +3,7 @@ package com.asusoftware.AuthServer.repository;
 import com.asusoftware.AuthServer.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -11,4 +12,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByEmail(String email);
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
+
+    int deleteByEnabledFalseAndCreatedAtBefore(Date cutoff);
+
 }
